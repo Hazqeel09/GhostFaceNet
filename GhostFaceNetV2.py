@@ -73,7 +73,6 @@ class ModifiedGDC(nn.Module):
         x = self.conv_dw(x)
         x = self.bn1(x)
         x = self.conv(x)
-        print(x.shape)
         x = x.view(x.size(0), -1) #flatten
         if self.dropout > 0.:
             x = F.dropout(x, p=self.dropout, training=self.training)
