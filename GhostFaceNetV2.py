@@ -241,7 +241,7 @@ class GhostFaceNetV2(nn.Module):
         x = self.classifier(x)
         return x
 
-def ghostnetv2(**kwargs):
+def ghostnetv2(bn_momentum=0.9, bn_epsilon=1e-5, **kwargs):
     cfgs = [   
         # k, t, c, SE, s 
         [[3,  16,  16, 0, 1]],
@@ -263,7 +263,14 @@ def ghostnetv2(**kwargs):
          [5, 960, 160, 0.25, 1]
         ]
     ]
-    return GhostFaceNetV2(cfgs, num_classes=kwargs['num_classes'], 
+
+    GhostFaceNet = GhostFaceNetV2(cfgs, num_classes=kwargs['num_classes'], 
                     width=kwargs['width'], 
                     dropout=kwargs['dropout'],
                     args=kwargs['args'])
+
+    for module in GhostFaceNet.modules():
+        if isinstance(module, nn.BatchNorm2d):
+            module.momentum, module.eps = bn_momentum, bn_epsilon
+
+    return GhostFaceNet
