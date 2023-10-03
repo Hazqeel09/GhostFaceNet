@@ -59,6 +59,7 @@ class ConvBnAct(nn.Module):
 
 class ModifiedGDC(nn.Module):
     def __init__(self, in_chs, num_classes, dropout):
+        super(ModifiedGDC, self).__init__()
         self.dropout = dropout
 
         self.conv_dw = nn.Conv2d(in_chs, in_chs, kernel_size=1,groups=in_chs, bias=False)
@@ -105,12 +106,12 @@ class GhostModuleV2(nn.Module):
             self.primary_conv = nn.Sequential(  
                 nn.Conv2d(inp, init_channels, kernel_size, stride, kernel_size//2, bias=False),
                 nn.BatchNorm2d(init_channels),
-                nn.PReLU(inplace=True) if relu else nn.Sequential(),
+                nn.PReLU() if relu else nn.Sequential(),
             )
             self.cheap_operation = nn.Sequential(
                 nn.Conv2d(init_channels, new_channels, dw_size, 1, dw_size//2, groups=init_channels, bias=False),
                 nn.BatchNorm2d(new_channels),
-                nn.PReLU(inplace=True) if relu else nn.Sequential(),
+                nn.PReLU() if relu else nn.Sequential(),
             )
             self.short_conv = nn.Sequential( 
                 nn.Conv2d(inp, oup, kernel_size, stride, kernel_size//2, bias=False),
