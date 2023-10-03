@@ -11,3 +11,6 @@ model = ghostfacenetv2(num_classes=3, width=1, dropout=0., args=None)
 img = torch.randn(3, 3, 256, 256)
 model(img)
 ```
+
+### Note
+I retain Global Average Pooling to ensure flattened image can be feed to the linear layer. If you have better workaround, feel free to do PR.
