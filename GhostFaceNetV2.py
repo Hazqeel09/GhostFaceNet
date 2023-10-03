@@ -73,11 +73,13 @@ class ModifiedGDC(nn.Module):
         x = self.conv_dw(x)
         x = self.bn1(x)
         x = self.conv(x)
+        print(x.shape)
         x = x.view(x.size(0), -1) #flatten
         if self.dropout > 0.:
             x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.bn2(x)
         x = self.linear(x)
+        return x
     
 class GhostModuleV2(nn.Module):
     def __init__(self, inp, oup, kernel_size=1, ratio=2, dw_size=3, stride=1, relu=True,mode=None,args=None):
@@ -188,7 +190,7 @@ class GhostBottleneckV2(nn.Module):
 
    
 class GhostFaceNetV2(nn.Module):
-    def __init__(self, cfgs, num_classes=1000, width=1.0, dropout=0.2,block=GhostBottleneckV2,
+    def __init__(self, cfgs, num_classes=1000, width=1.0, dropout=0.2, block=GhostBottleneckV2,
                  add_pointwise_conv=False, args=None):
         super(GhostFaceNetV2, self).__init__()
         self.cfgs = cfgs
@@ -219,12 +221,13 @@ class GhostFaceNetV2(nn.Module):
         output_channel = _make_divisible(exp_size * width, 4)
         if add_pointwise_conv:
             stages.append(nn.Sequential(ConvBnAct(input_channel, output_channel, 1)))
-        input_channel = output_channel
+            input_channel = output_channel
         
         self.blocks = nn.Sequential(*stages)        
 
         # building last several layers
-        output_channel = 512 #embedding from GhostFaceNets
+        output_channel = 1280 #embedding from GhostFaceNets
+        self.global_pool = nn.AdaptiveAvgPool2d((1, 1))
         self.conv_head = nn.Conv2d(input_channel, output_channel, 1, 1, 0, bias=True)
         self.bn2 = nn.BatchNorm2d(output_channel)
         self.act2 = nn.PReLU()
@@ -235,13 +238,14 @@ class GhostFaceNetV2(nn.Module):
         x = self.bn1(x)
         x = self.act1(x)
         x = self.blocks(x)
+        x = self.global_pool(x)
         x = self.conv_head(x)
         x = self.bn2(x)
         x = self.act2(x)
         x = self.classifier(x)
         return x
 
-def ghostnetv2(bn_momentum=0.9, bn_epsilon=1e-5, **kwargs):
+def ghostfacenetv2(bn_momentum=0.9, bn_epsilon=1e-5, **kwargs):
     cfgs = [   
         # k, t, c, SE, s 
         [[3,  16,  16, 0, 1]],
@@ -264,10 +268,10 @@ def ghostnetv2(bn_momentum=0.9, bn_epsilon=1e-5, **kwargs):
         ]
     ]
 
-    GhostFaceNet = GhostFaceNetV2(cfgs, num_classes=kwargs['num_classes'], 
-                    width=kwargs['width'], 
-                    dropout=kwargs['dropout'],
-                    args=kwargs['args'])
+    GhostFaceNet = GhostFaceNetV2(cfgs, num_classes=kwargs['num_classes'],
+                                  width=kwargs['width'],
+                                  dropout=kwargs['dropout'],
+                                  args=kwargs['args'])
 
     for module in GhostFaceNet.modules():
         if isinstance(module, nn.BatchNorm2d):
