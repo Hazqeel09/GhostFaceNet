@@ -188,7 +188,8 @@ class GhostBottleneckV2(nn.Module):
 
    
 class GhostFaceNetV2(nn.Module):
-    def __init__(self, cfgs, num_classes=1000, width=1.0, dropout=0.2,block=GhostBottleneckV2,args=None):
+    def __init__(self, cfgs, num_classes=1000, width=1.0, dropout=0.2,block=GhostBottleneckV2,
+                 add_pointwise_conv=False, args=None):
         super(GhostFaceNetV2, self).__init__()
         self.cfgs = cfgs
 
@@ -216,13 +217,14 @@ class GhostFaceNetV2(nn.Module):
             stages.append(nn.Sequential(*layers))
 
         output_channel = _make_divisible(exp_size * width, 4)
-        stages.append(nn.Sequential(ConvBnAct(input_channel, output_channel, 1)))
+        if add_pointwise_conv:
+            stages.append(nn.Sequential(ConvBnAct(input_channel, output_channel, 1)))
         input_channel = output_channel
         
         self.blocks = nn.Sequential(*stages)        
 
         # building last several layers
-        output_channel = 1280
+        output_channel = 512 #embedding from GhostFaceNets
         self.conv_head = nn.Conv2d(input_channel, output_channel, 1, 1, 0, bias=True)
         self.bn2 = nn.BatchNorm2d(output_channel)
         self.act2 = nn.PReLU()
