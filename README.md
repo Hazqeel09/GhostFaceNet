@@ -3,6 +3,8 @@ PyTorch version of [GhostFaceNet](https://github.com/HamadYA/GhostFaceNets/tree/
 
 GhostNetV2 code from [Huawei Noah's Ark Lab](https://github.com/huawei-noah/Efficient-AI-Backbones/tree/master).
 
+Loss function code from [Insight Face](https://github.com/deepinsight/insightface/blob/master/recognition/arcface_torch/losses.py).
+
 ```python
 from GhostFaceNetV2 import ghostfacenetv2
 import torch
