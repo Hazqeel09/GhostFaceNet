@@ -7,10 +7,11 @@ GhostNetV2 code from [Huawei Noah's Ark Lab](https://github.com/huawei-noah/Effi
 from GhostFaceNetV2 import ghostfacenetv2
 import torch
 
-model = ghostfacenetv2(num_classes=3, width=1, dropout=0., args=None)
-img = torch.randn(3, 3, 256, 256)
+IMAGE_SIZE = 1280
+model = ghostfacenetv2(image_size=IMAGE_SIZE, num_classes=3, width=1, dropout=0., args=None)
+img = torch.randn(3, 3, IMAGE_SIZE, IMAGE_SIZE)
 model(img)
 ```
 
 ### Note
-I retain Global Average Pooling to ensure flattened image can be feed to the linear layer. If you have better workaround, feel free to do PR.
+In order to not use GAP like mentioned in the paper, you need to specify the image size.
