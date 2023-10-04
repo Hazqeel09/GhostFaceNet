@@ -58,7 +58,7 @@ class ConvBnAct(nn.Module):
         return x
 
 class ModifiedGDC(nn.Module):
-    def __init__(self, image_size, in_chs, num_classes, dropout, get_emb, emb=512): #embedding = 512 from original code
+    def __init__(self, image_size, in_chs, num_classes, dropout, emb=512): #embedding = 512 from original code
         super(ModifiedGDC, self).__init__()
         self.dropout = dropout
 
@@ -73,7 +73,7 @@ class ModifiedGDC(nn.Module):
             flattened_features = emb*((image_size//32 + 1)**2)
 
         self.bn2 = nn.BatchNorm1d(flattened_features)
-        self.linear = nn.Identity() if get_emb else nn.Linear(flattened_features, num_classes) 
+        self.linear = nn.Linear(flattened_features, num_classes) if num_classes else nn.Identity()
 
     def forward(self, x):
         x = self.conv_dw(x)
@@ -197,7 +197,7 @@ class GhostBottleneckV2(nn.Module):
    
 class GhostFaceNetV2(nn.Module):
     def __init__(self, cfgs, image_size=256, num_classes=1000, width=1.0, dropout=0.2, block=GhostBottleneckV2,
-                 add_pointwise_conv=False, get_emb=False, args=None):
+                 add_pointwise_conv=False, args=None):
         super(GhostFaceNetV2, self).__init__()
         self.cfgs = cfgs
 
@@ -238,7 +238,7 @@ class GhostFaceNetV2(nn.Module):
             pointwise_conv.append(nn.Sequential())
 
         self.pointwise_conv = nn.Sequential(*pointwise_conv)
-        self.classifier = ModifiedGDC(image_size, output_channel, num_classes, dropout, get_emb)
+        self.classifier = ModifiedGDC(image_size, output_channel, num_classes, dropout)
 
     def forward(self, x):
         x = self.conv_stem(x)
@@ -272,15 +272,10 @@ def ghostfacenetv2(bn_momentum=0.9, bn_epsilon=1e-5, num_classes=None, **kwargs)
         ]
     ]
 
-    get_emb = True
-    if num_classes is not None:
-        get_emb = False
-
     GhostFaceNet = GhostFaceNetV2(cfgs, image_size=kwargs['image_size'],
                                   num_classes=num_classes,
                                   width=kwargs['width'],
                                   dropout=kwargs['dropout'],
-                                  get_emb=get_emb,
                                   args=kwargs['args'])
 
     for module in GhostFaceNet.modules():
