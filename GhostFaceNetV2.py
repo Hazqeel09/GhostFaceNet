@@ -210,7 +210,6 @@ class GhostFaceNetV2(nn.Module):
 
         # building inverted residual blocks
         stages = []
-        #block = block
         layer_id=0
         for cfg in self.cfgs:
             layers = []
