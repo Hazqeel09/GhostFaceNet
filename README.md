@@ -13,5 +13,8 @@ img = torch.randn(3, 3, IMAGE_SIZE, IMAGE_SIZE)
 model(img)
 ```
 
-### Note
 In order to not use GAP like mentioned in the paper, you need to specify the image size.
+
+# TODO
+- [x] Replicate model.
+- [ ] Create training code.
