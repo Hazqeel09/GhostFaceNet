@@ -68,12 +68,10 @@ class ModifiedGDC(nn.Module):
         nn.init.xavier_normal_(self.conv.weight.data) #initialize weight with xavier normal
         if image_size % 32 == 0:
             flattened_features = in_chs*((image_size//32)**2)
-            print(1,image_size, flattened_features)
             self.bn2 = nn.BatchNorm1d(flattened_features)
             self.linear = nn.Linear(flattened_features, num_classes)
         else:
             flattened_features = in_chs*((image_size//32 + 1)**2)
-            print(2,flattened_features)
             self.bn2 = nn.BatchNorm1d(flattened_features)
             self.linear = nn.Linear(flattened_features, num_classes)
 
@@ -84,7 +82,6 @@ class ModifiedGDC(nn.Module):
         x = x.view(x.size(0), -1) #flatten
         if self.dropout > 0.:
             x = F.dropout(x, p=self.dropout, training=self.training)
-        print(x.shape)
         x = self.bn2(x)
         x = self.linear(x)
         return x
@@ -245,17 +242,11 @@ class GhostFaceNetV2(nn.Module):
         self.classifier = ModifiedGDC(image_size, output_channel,num_classes,dropout)
 
     def forward(self, x):
-        print(x.shape)
         x = self.conv_stem(x)
-        print(x.shape)
         x = self.bn1(x)
-        print(x.shape)
         x = self.act1(x)
-        print(x.shape)
         x = self.blocks(x)
-        print(x.shape)
         x = self.pointwise_conv(x)
-        print(x.shape)
         x = self.classifier(x)
         return x
 
