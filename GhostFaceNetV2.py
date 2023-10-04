@@ -61,7 +61,7 @@ class ModifiedGDC(nn.Module):
     def __init__(self, image_size, in_chs, num_classes, dropout, get_emb, emb=512): #embedding = 512 from original code
         super(ModifiedGDC, self).__init__()
         self.dropout = dropout
-        
+
         self.conv_dw = nn.Conv2d(in_chs, in_chs, kernel_size=1,groups=in_chs, bias=False)
         self.bn1 = nn.BatchNorm2d(in_chs)
         self.conv = nn.Conv2d(in_chs, emb, kernel_size=1, bias=False)
@@ -181,6 +181,7 @@ class GhostBottleneckV2(nn.Module):
                 nn.Conv2d(in_chs, out_chs, 1, stride=1, padding=0, bias=False),
                 nn.BatchNorm2d(out_chs),
             )
+            
     def forward(self, x):
         residual = x
         x = self.ghost1(x)
@@ -250,7 +251,7 @@ class GhostFaceNetV2(nn.Module):
         x = self.classifier(x)
         return x
 
-def ghostfacenetv2(bn_momentum=0.9, bn_epsilon=1e-5, **kwargs):
+def ghostfacenetv2(bn_momentum=0.9, bn_epsilon=1e-5,num_classes=None, **kwargs):
     cfgs = [   
         # k, t, c, SE, s 
         [[3,  16,  16, 0, 1]],
@@ -273,11 +274,15 @@ def ghostfacenetv2(bn_momentum=0.9, bn_epsilon=1e-5, **kwargs):
         ]
     ]
 
+    get_emb = True
+    if num_classes is not None:
+        get_emb = False
+
     GhostFaceNet = GhostFaceNetV2(cfgs, image_size=kwargs['image_size'],
-                                  num_classes=kwargs['num_classes'],
+                                  num_classes=num_classes,
                                   width=kwargs['width'],
                                   dropout=kwargs['dropout'],
-                                  get_emb=kwargs['get_emb'],
+                                  get_emb=get_emb,
                                   args=kwargs['args'])
 
     for module in GhostFaceNet.modules():

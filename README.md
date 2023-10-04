@@ -7,6 +7,13 @@ GhostNetV2 code from [Huawei Noah's Ark Lab](https://github.com/huawei-noah/Effi
 from GhostFaceNetV2 import ghostfacenetv2
 import torch
 
+#return embedding
+IMAGE_SIZE = 112
+model = ghostfacenetv2(image_size=IMAGE_SIZE, width=1, dropout=0., get_emb=True, args=None)
+img = torch.randn(3, 3, IMAGE_SIZE, IMAGE_SIZE)
+display(model(img))
+
+#return classification
 IMAGE_SIZE = 112
 model = ghostfacenetv2(image_size=IMAGE_SIZE, num_classes=3, width=1, dropout=0., get_emb=True, args=None)
 img = torch.randn(3, 3, IMAGE_SIZE, IMAGE_SIZE)
