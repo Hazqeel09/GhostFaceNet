@@ -181,7 +181,7 @@ class GhostBottleneckV2(nn.Module):
                 nn.Conv2d(in_chs, out_chs, 1, stride=1, padding=0, bias=False),
                 nn.BatchNorm2d(out_chs),
             )
-            
+
     def forward(self, x):
         residual = x
         x = self.ghost1(x)
@@ -235,12 +235,11 @@ class GhostFaceNetV2(nn.Module):
             pointwise_conv.append(nn.Conv2d(input_channel, output_channel, 1, 1, 0, bias=True))
             pointwise_conv.append(nn.BatchNorm2d(output_channel))
             pointwise_conv.append(nn.PReLU())
-            self.pointwise_conv = nn.Sequential(*pointwise_conv)
-            self.classifier = ModifiedGDC(image_size, output_channel, num_classes, dropout, get_emb)
         else:
             pointwise_conv.append(nn.Sequential())
-            self.pointwise_conv = nn.Sequential(*pointwise_conv)
-            self.classifier = ModifiedGDC(image_size, output_channel, num_classes, dropout, get_emb)
+
+        self.pointwise_conv = nn.Sequential(*pointwise_conv)
+        self.classifier = ModifiedGDC(image_size, output_channel, num_classes, dropout, get_emb)
 
     def forward(self, x):
         x = self.conv_stem(x)
@@ -251,7 +250,7 @@ class GhostFaceNetV2(nn.Module):
         x = self.classifier(x)
         return x
 
-def ghostfacenetv2(bn_momentum=0.9, bn_epsilon=1e-5,num_classes=None, **kwargs):
+def ghostfacenetv2(bn_momentum=0.9, bn_epsilon=1e-5, num_classes=None, **kwargs):
     cfgs = [   
         # k, t, c, SE, s 
         [[3,  16,  16, 0, 1]],
