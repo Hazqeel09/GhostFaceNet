@@ -58,30 +58,32 @@ class ConvBnAct(nn.Module):
         return x
 
 class ModifiedGDC(nn.Module):
-    def __init__(self, image_size, in_chs, num_classes, dropout, emb=512): #embedding = 512 from original code
+    def __init__(self, in_chs, image_size, num_classes, dropout, emb=512): #embedding = 512 from original code
         super(ModifiedGDC, self).__init__()
+        image_kernel_size = 0
         self.dropout = dropout
 
-        self.conv_dw = nn.Conv2d(in_chs, in_chs, kernel_size=1,groups=in_chs, bias=False)
+        if image_size % 32 == 0:
+            image_kernel_size = image_size//32
+        else:
+            image_kernel_size = (image_size//32) + 1
+        self.conv_dw = nn.Conv2d(in_chs, in_chs, kernel_size=image_kernel_size, groups=in_chs, bias=False)
+
         self.bn1 = nn.BatchNorm2d(in_chs)
+
         self.conv = nn.Conv2d(in_chs, emb, kernel_size=1, bias=False)
         nn.init.xavier_normal_(self.conv.weight.data) #initialize weight
 
-        if image_size % 32 == 0:
-            flattened_features = emb*((image_size//32)**2)
-        else:
-            flattened_features = emb*((image_size//32 + 1)**2)
-
-        self.bn2 = nn.BatchNorm1d(flattened_features)
-        self.linear = nn.Linear(flattened_features, num_classes) if num_classes else nn.Identity()
+        self.bn2 = nn.BatchNorm1d(emb)
+        self.linear = nn.Linear(emb, num_classes) if num_classes else nn.Identity()
 
     def forward(self, x):
         x = self.conv_dw(x)
         x = self.bn1(x)
+        if self.dropout > 0. and self.dropout < 1.:
+            x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.conv(x)
         x = x.view(x.size(0), -1) #flatten
-        if self.dropout > 0.:
-            x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.bn2(x)
         x = self.linear(x)
         return x
@@ -238,7 +240,7 @@ class GhostFaceNetV2(nn.Module):
             pointwise_conv.append(nn.Sequential())
 
         self.pointwise_conv = nn.Sequential(*pointwise_conv)
-        self.classifier = ModifiedGDC(image_size, output_channel, num_classes, dropout)
+        self.classifier = ModifiedGDC(output_channel, image_size, num_classes, dropout)
 
     def forward(self, x):
         x = self.conv_stem(x)
@@ -272,8 +274,9 @@ def ghostfacenetv2(bn_momentum=0.9, bn_epsilon=1e-5, num_classes=None, **kwargs)
         ]
     ]
 
-    GhostFaceNet = GhostFaceNetV2(cfgs, image_size=kwargs['image_size'],
+    GhostFaceNet = GhostFaceNetV2(cfgs,
                                   num_classes=num_classes,
+                                  image_size=kwargs['image_size'],
                                   width=kwargs['width'],
                                   dropout=kwargs['dropout'],
                                   args=kwargs['args'])
